@@ -21,6 +21,9 @@ var highScore = 0;
 var food;
 var turnPerformed = false; // flag to not allow turning twice on one loop
 
+/**
+ * Hacky code needs some serious refactoring
+ */
 
 /**
  * Direction enum
