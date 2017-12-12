@@ -15,6 +15,8 @@ var canvas;
 var context;
 var snake;
 var size = 10; // the size of one rectangle
+var currentScore = 0;
+var highScore = 0;
 
 
 /**
@@ -62,7 +64,6 @@ class Position {
 
 
 function moveSnake() {
-
   var newHead = snake.rects.pop();
 
   switch (snake.direction) {
@@ -89,7 +90,16 @@ function moveSnake() {
 
   snake.rects.unshift(newHead);
 
-  drawSnake();
+  // check if snake collided with something
+  if (snakeCollided()) {
+    if (score >= highScore) {
+      highScore = score;
+    }
+    score = 0;
+    snake = new Snake(); // reset the snake
+  }
+
+  drawSnake();  
 }
 
 function drawSnake() {
@@ -97,6 +107,19 @@ function drawSnake() {
   snake.rects.forEach(rect => {
     context.fillRect(rect.x, rect.y, size, size);
   });
+}
+
+function snakeCollided() {
+  var snakeHead = snake.rects[0];
+  
+  // if collision with borders
+  if (snakeHead.x < 0 || snakeHead.x >= canvas.width || snakeHead.y < 0 || snakeHead.y >= canvas.height) {
+    return true;
+  }
+
+  var tail = snake.rects.slice(1);
+  // collision with itself
+  return tail.some(rect => rect.x === snakeHead.x && rect.y === snakeHead.y) 
 }
 
 
