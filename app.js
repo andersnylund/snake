@@ -3,6 +3,7 @@ $(document).ready(function () {
   canvas = document.getElementById('canvas');
   context = canvas.getContext('2d');
   snake = new Snake();
+  createNewFood();
   start();
 });
 
@@ -15,16 +16,10 @@ var canvas;
 var context;
 var snake;
 var size = 10; // the size of one rectangle
-var currentScore = 0;
+var score = 0;
 var highScore = 0;
-
-
-/**
- * Clear everything from the canvas 
- */
-function clearCanvas() {
-  context.clearRect(0, 0, canvas.width, canvas.height);
-}
+var food;
+var turnPerformed = false; // flag to not allow turning twice on one loop
 
 
 /**
@@ -62,8 +57,8 @@ class Position {
 }
 
 
-
 function moveSnake() {
+
   var newHead = snake.rects.pop();
 
   switch (snake.direction) {
@@ -94,24 +89,44 @@ function moveSnake() {
   if (snakeCollided()) {
     if (score >= highScore) {
       highScore = score;
+      $("#highScore").html(highScore.toString());
     }
     score = 0;
+    $("#score").html("0");
     snake = new Snake(); // reset the snake
+
   }
 
-  drawSnake();  
+  if (snakeAteFood()) {
+    score = score + 10;
+    createNewFood();
+    $("#score").html(score.toString());
+    var tail = snake.rects[snake.rects.length - 1];
+    snake.rects.push(new Position(tail.x, tail.y));
+  }
+
+  drawSnakeAndFood();
+
+  turnPerformed = false; 
 }
 
-function drawSnake() {
-  clearCanvas(); // clear the canvas completely, not efficient at all
+/**
+ * Draw the snake as it is currently
+ */
+function drawSnakeAndFood() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
   snake.rects.forEach(rect => {
     context.fillRect(rect.x, rect.y, size, size);
   });
+  context.fillRect(food.x, food.y, size, size);
 }
 
+/**
+ * Check if snake collided with borders or itself
+ */
 function snakeCollided() {
   var snakeHead = snake.rects[0];
-  
+
   // if collision with borders
   if (snakeHead.x < 0 || snakeHead.x >= canvas.width || snakeHead.y < 0 || snakeHead.y >= canvas.height) {
     return true;
@@ -119,7 +134,26 @@ function snakeCollided() {
 
   var tail = snake.rects.slice(1);
   // collision with itself
-  return tail.some(rect => rect.x === snakeHead.x && rect.y === snakeHead.y) 
+  return tail.some(rect => rect.x === snakeHead.x && rect.y === snakeHead.y)
+}
+
+
+function snakeAteFood() {
+  return snake.rects[0].x === food.x && snake.rects[0].y === food.y;
+}
+
+
+/**
+ * Creates a new food at a random place not colliding with the snake
+ */
+function createNewFood() {
+  var randX, randY;
+  do {
+    randX = Math.round(Math.floor(Math.random() * (canvas.width - size)) / 10) * 10;
+    randY = Math.round(Math.floor(Math.random() * (canvas.height - size)) / 10) * 10;
+  } while (snake.rects.some(rect => rect.x === randX && rect.y === randY));
+  food = new Position(randX, randY);
+  context.fillRect(randX, randY, size, size);
 }
 
 
@@ -127,35 +161,41 @@ function snakeCollided() {
  * Register key presses
  */
 $(document).keydown(function (e) {
-  switch (e.which) {
-    case 37: // left
-      if (snake.direction === Direction.right) break;
-      snake.direction = Direction.left;
-      break;
+  if (!turnPerformed) { // avoid turning twice between updates
+    switch (e.which) {
+      case 37: // left
+        if (snake.direction === Direction.right) break;
+        snake.direction = Direction.left;
+        turnPerformed = true;
+        break;
 
-    case 38: // up
-      if (snake.direction === Direction.down) break;
-      snake.direction = Direction.up;
-      break;
+      case 38: // up
+        if (snake.direction === Direction.down) break;
+        snake.direction = Direction.up;
+        turnPerformed = true;
+        break;
 
-    case 39: // right
-      if (snake.direction === Direction.left) break;
-      snake.direction = Direction.right;
-      break;
+      case 39: // right
+        if (snake.direction === Direction.left) break;
+        snake.direction = Direction.right;
+        turnPerformed = true;
+        break;
 
-    case 40: // down
-      if (snake.direction === Direction.up) break;
-      snake.direction = Direction.down;
-      break;
+      case 40: // down
+        if (snake.direction === Direction.up) break;
+        snake.direction = Direction.down;
+        turnPerformed = true;
+        break;
 
-    default: return; // exit this handler for other keys
+      default: return; // exit this handler for other keys
+    }
+    e.preventDefault(); // prevent the default action (scroll / move caret)
   }
-  e.preventDefault(); // prevent the default action (scroll / move caret)
 });
 
 
 /**
- * Start 
+ * Start loop
  */
 function start() {
   var interval = window.setInterval(moveSnake, 80);
