@@ -1,4 +1,53 @@
 $(document).ready(function () {
+
+  $('#submitScore').click(function () {
+    let message = {
+      'messageType': 'SCORE',
+      'score': parseFloat(highScore)
+    };
+    window.parent.postMessage(message, '*');
+  });
+
+  $('#saveState').click(function () {
+    let message = {
+      'messageType': 'SAVE',
+      'gameState': {
+        'score': score,
+        'snake': snake.rects,
+        'direction': snake.direction
+      }
+    };
+    window.parent.postMessage(message, '*');
+  });
+
+  $('#loadState').click(function () {
+    let message = {
+      'messageType': 'LOAD_REQUEST'
+    }
+    window.parent.postMessage(message, '*');
+  });
+
+  // Resize the iframe
+  var message = {
+    'messageType': "SETTING",
+    'options': {
+      "width": 540,
+      "height": 590
+    }
+  };
+  window.parent.postMessage(message, "*");
+
+  window.addEventListener("message", function(evt) {
+    if(evt.data.messageType === "LOAD") {
+      state = evt.data
+      score = state.score;
+      snake.direction = state.direction;
+      snake.rects = state.snake
+    } else if (evt.data.messageType === "ERROR") {
+      alert(evt.data.info);
+    }
+  });
+
   iframe = document.getElementById('iframe');
   canvas = document.getElementById('canvas');
   context = canvas.getContext('2d');
@@ -11,18 +60,18 @@ $(document).ready(function () {
 /**
  * Global variables
  */
-var iframe;
-var canvas;
-var context;
-var snake;
-var size = 10; // the size of one rectangle
-var score = 0;
-var highScore = 0;
-var food;
-var turnPerformed = false; // flag to not allow turning twice on one loop
+let iframe;
+let canvas;
+let context;
+let snake;
+let size = 10; // the size of one rectangle
+let score = 0;
+let highScore = 0;
+let food;
+let turnPerformed = false; // flag to not allow turning twice on one loop
 
 /**
- * Hacky code needs some serious refactoring
+ * Hacky code. Needs some serious refactoring
  */
 
 /**
@@ -43,7 +92,7 @@ class Snake {
   constructor() {
     this.direction = Direction.right;
     this.rects = [];
-    for (var i = 5; i > 0; --i) {
+    for (let i = 5; i > 0; --i) {
       this.rects.push(new Position(i * size, size));
     }
   }
@@ -62,7 +111,7 @@ class Position {
 
 function moveSnake() {
 
-  var newHead = snake.rects.pop();
+  let newHead = snake.rects.pop();
 
   switch (snake.direction) {
     case 1: // left
@@ -104,13 +153,13 @@ function moveSnake() {
     score = score + 10;
     createNewFood();
     $("#score").html(score.toString());
-    var tail = snake.rects[snake.rects.length - 1];
+    let tail = snake.rects[snake.rects.length - 1];
     snake.rects.push(new Position(tail.x, tail.y));
   }
 
   drawSnakeAndFood();
 
-  turnPerformed = false; 
+  turnPerformed = false;
 }
 
 /**
@@ -128,14 +177,14 @@ function drawSnakeAndFood() {
  * Check if snake collided with borders or itself
  */
 function snakeCollided() {
-  var snakeHead = snake.rects[0];
+  let snakeHead = snake.rects[0];
 
   // if collision with borders
   if (snakeHead.x < 0 || snakeHead.x >= canvas.width || snakeHead.y < 0 || snakeHead.y >= canvas.height) {
     return true;
   }
 
-  var tail = snake.rects.slice(1);
+  let tail = snake.rects.slice(1);
   // collision with itself
   return tail.some(rect => rect.x === snakeHead.x && rect.y === snakeHead.y)
 }
@@ -150,7 +199,7 @@ function snakeAteFood() {
  * Creates a new food at a random place not colliding with the snake
  */
 function createNewFood() {
-  var randX, randY;
+  let randX, randY;
   do {
     randX = Math.round(Math.floor(Math.random() * (canvas.width - size)) / 10) * 10;
     randY = Math.round(Math.floor(Math.random() * (canvas.height - size)) / 10) * 10;
@@ -190,16 +239,16 @@ $(document).keydown(function (e) {
         turnPerformed = true;
         break;
 
-      default: return; // exit this handler for other keys
+      default:
+        return; // exit this handler for other keys
     }
     e.preventDefault(); // prevent the default action (scroll / move caret)
   }
 });
 
-
 /**
  * Start loop
  */
 function start() {
-  var interval = window.setInterval(moveSnake, 80);
+  let interval = window.setInterval(moveSnake, 80);
 }
