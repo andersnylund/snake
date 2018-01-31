@@ -39,7 +39,7 @@ $(document).ready(function () {
 
   window.addEventListener("message", function(evt) {
     if(evt.data.messageType === "LOAD") {
-      state = evt.data
+      state = evt.data.gameState;
       score = state.score;
       snake.direction = state.direction;
       snake.rects = state.snake
