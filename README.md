@@ -1,2 +1,2 @@
-# snake
-A simple snake implemented in HTML 5 and JavaScript
+# SnakeTheGame
+A simple snake implemented with HTML 5 and JavaScript
