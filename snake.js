@@ -1,9 +1,10 @@
 $(document).ready(function () {
 
   $('#submitScore').click(function () {
+    let scoreToSend = highScore > score ? highScore : score;
     let message = {
       'messageType': 'SCORE',
-      'score': parseFloat(highScore)
+      'score': parseFloat(scoreToSend)
     };
     window.parent.postMessage(message, '*');
   });
@@ -37,10 +38,11 @@ $(document).ready(function () {
   };
   window.parent.postMessage(message, "*");
 
-  window.addEventListener("message", function(evt) {
-    if(evt.data.messageType === "LOAD") {
+  window.addEventListener("message", function (evt) {
+    if (evt.data.messageType === "LOAD") {
       state = evt.data.gameState;
       score = state.score;
+      $("#score").html(score.toString());
       snake.direction = state.direction;
       snake.rects = state.snake
     } else if (evt.data.messageType === "ERROR") {
